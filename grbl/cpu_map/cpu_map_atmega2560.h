@@ -86,9 +86,17 @@
 // Define flood and mist coolant enable output pins.
 // NOTE: Uno analog pins 4 and 5 are reserved for an i2c interface, and may be installed at
 // a later date if flash and memory space allows.
-#define COOLANT_FLOOD_DDR     DDRH
-#define COOLANT_FLOOD_PORT    PORTH
-#define COOLANT_FLOOD_BIT     5 // MEGA2560 Digital Pin 8
+
+#ifdef BEEP_BEEP
+	#define BEEP_BEEP_DDR   DDRH
+	#define BEEP_BEEP_PORT  PORTH
+	#define BEEP_BEEP_BIT   5  // MEGA2560 Digital Pin 8
+#else
+	#define COOLANT_FLOOD_DDR     DDRH
+	#define COOLANT_FLOOD_PORT    PORTH
+	#define COOLANT_FLOOD_BIT     5 // MEGA2560 Digital Pin 8
+#endif  
+
 #ifdef ENABLE_M7 // Mist coolant disabled by default. See config.h to enable/disable.
 #define COOLANT_MIST_DDR    DDRH
 #define COOLANT_MIST_PORT   PORTH

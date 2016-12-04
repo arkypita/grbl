@@ -304,26 +304,48 @@ void protocol_execute_realtime()
         if ((sys.state == STATE_IDLE) || ((sys.state & (STATE_HOLD | STATE_MOTION_CANCEL)) && (sys.suspend & SUSPEND_ENABLE_READY))) {
           // Re-energize powered components, if disabled by SAFETY_DOOR.
           if (sys.suspend & SUSPEND_ENERGIZE) { 
-            // Delayed Tasks: Restart spindle and coolant, delay to power-up, then resume cycle.
-            if (gc_state.modal.spindle != SPINDLE_DISABLE) { 
-              spindle_set_state(gc_state.modal.spindle, gc_state.spindle_speed); 
-              delay_ms(SAFETY_DOOR_SPINDLE_DELAY); // TODO: Blocking function call. Need a non-blocking one eventually.
-            }
-            if (gc_state.modal.coolant != COOLANT_DISABLE) { 
-              coolant_set_state(gc_state.modal.coolant); 
-              delay_ms(SAFETY_DOOR_COOLANT_DELAY); // TODO: Blocking function call. Need a non-blocking one eventually.
-            }
-            // TODO: Install return to pre-park position.
+			
+			#ifdef BEEP_BEEP
+				if (!(sys.suspend & SUSPEND_CONFIRM_WAIT))
+					sys.suspend |= SUSPEND_CONFIRM_WAIT; //activate wating cycle on first restart
+				else
+				{
+					if(beep_beep_done())
+						sys.suspend &= ~SUSPEND_CONFIRM_WAIT; //end waiting cycle on second restart	
+				}
+			#endif
+			
+			if (!(sys.suspend & SUSPEND_CONFIRM_WAIT))
+			{
+				// Delayed Tasks: Restart spindle and coolant, delay to power-up, then resume cycle.
+				
+				if (gc_state.modal.spindle != SPINDLE_DISABLE) { 
+				  spindle_set_state(gc_state.modal.spindle, gc_state.spindle_speed); 
+				  delay_ms(SAFETY_DOOR_SPINDLE_DELAY); // TODO: Blocking function call. Need a non-blocking one eventually.
+				}
+				if (gc_state.modal.coolant != COOLANT_DISABLE) { 
+				  coolant_set_state(gc_state.modal.coolant); 
+				  delay_ms(SAFETY_DOOR_COOLANT_DELAY); // TODO: Blocking function call. Need a non-blocking one eventually.
+				}
+				// TODO: Install return to pre-park position.
+			}
           }
-          // Start cycle only if queued motions exist in planner buffer and the motion is not canceled.
-          if (plan_get_current_block() && bit_isfalse(sys.suspend,SUSPEND_MOTION_CANCEL)) {
-            sys.state = STATE_CYCLE;
-            st_prep_buffer(); // Initialize step segment buffer before beginning cycle.
-            st_wake_up();
-          } else { // Otherwise, do nothing. Set and resume IDLE state.
-            sys.state = STATE_IDLE;
-          }
-          sys.suspend = SUSPEND_DISABLE; // Break suspend state.
+		  
+		  
+		  if (!(sys.suspend & SUSPEND_CONFIRM_WAIT))
+		  {
+			  beep_beep_stop();
+			  
+			  // Start cycle only if queued motions exist in planner buffer and the motion is not canceled.
+			  if (plan_get_current_block() && bit_isfalse(sys.suspend,SUSPEND_MOTION_CANCEL)) {
+				sys.state = STATE_CYCLE;
+				st_prep_buffer(); // Initialize step segment buffer before beginning cycle.
+				st_wake_up();
+			  } else { // Otherwise, do nothing. Set and resume IDLE state.
+				sys.state = STATE_IDLE;
+			  }
+			  sys.suspend = SUSPEND_DISABLE; // Break suspend state.
+		  }
         }
       }    
       bit_false_atomic(sys_rt_exec_state,EXEC_CYCLE_START);
@@ -352,6 +374,11 @@ void protocol_execute_realtime()
     
   }
 
+  #ifdef BEEP_BEEP
+  if (sys.suspend & SUSPEND_CONFIRM_WAIT)
+	beep_beep_and_wait(); //play "beep beep beep and wait" while SUSPEND_CONFIRM_WAIT is high
+  #endif
+  
   // Overrides flag byte (sys.override) and execution should be installed here, since they 
   // are realtime and require a direct and controlled interface to the main stepper program.
 

@@ -53,6 +53,7 @@
 #include "planner.h"
 #include "print.h"
 #include "probe.h"
+#include "beep_beep.h"
 #include "protocol.h"
 #include "report.h"
 #include "serial.h"

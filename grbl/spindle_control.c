@@ -86,12 +86,12 @@ void spindle_set_state(uint8_t state, float rpm)
       // TODO: Install the optional capability for frequency-based output for servos.
       #ifdef CPU_MAP_ATMEGA2560
       	TCCRA_REGISTER = (1<<COMB_BIT) | (1<<WAVE1_REGISTER) | (1<<WAVE0_REGISTER);
-        TCCRB_REGISTER = (TCCRB_REGISTER & 0b11111000) | 0x02 | (1<<WAVE2_REGISTER) | (1<<WAVE3_REGISTER); // set to 1/8 Prescaler
+        TCCRB_REGISTER = (TCCRB_REGISTER & 0b11111000) | 0x06 | (1<<WAVE2_REGISTER) | (1<<WAVE3_REGISTER); // set Prescaler
         OCR4A = 0xFFFF; // set the top 16bit value
         uint16_t current_pwm;
       #else
         TCCRA_REGISTER = (1<<COMB_BIT) | (1<<WAVE1_REGISTER) | (1<<WAVE0_REGISTER);
-        TCCRB_REGISTER = (TCCRB_REGISTER & 0b11111000) | 0x02; // set to 1/8 Prescaler
+        TCCRB_REGISTER = (TCCRB_REGISTER & 0b11111000) | 0x04; // set Prescaler
         uint8_t current_pwm;
       #endif
 

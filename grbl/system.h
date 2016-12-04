@@ -65,6 +65,7 @@
 #define SUSPEND_ENABLE_READY  bit(1) // Ready to resume with a cycle start command.
 #define SUSPEND_ENERGIZE      bit(2) // Re-energizes output before resume.
 #define SUSPEND_MOTION_CANCEL bit(3) // Cancels resume motion. Used by probing routine.
+#define SUSPEND_CONFIRM_WAIT  bit(4) // Wait for resume confirmation
 
 
 // Define global system variables
